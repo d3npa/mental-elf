@@ -1,16 +1,24 @@
-use std::{fs, io};
-use std::io::prelude::*;
-use mental_elf::ElfHeader64;
+use std::{env, fs, process};
+use std::error::Error;
 
-fn main() -> io::Result<()> {
+use mental_elf::elf::ElfHeader;
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() != 2 {
+        eprintln!("Usage: {} <ELF File>", args[0]);
+        process::exit(1);
+    }
+
+    let path = &args[1];
+
     let mut fd = fs::OpenOptions::new()
-        .read(true).write(true).open("./example_elf")?;
+        .read(true).write(true).open(&path)?;
 
-    let mut buffer = [0u8; 0x40];
-    let _ = fd.read(&mut buffer);
-    let header = ElfHeader64::from_bytes(&buffer);
+    let header = ElfHeader::from_fd(&mut fd)?;
 
-    println!("{:?}", header);
+    println!("{:x?}", header);
 
     Ok(())
 }

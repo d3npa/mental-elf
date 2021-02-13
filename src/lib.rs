@@ -1,3 +1,5 @@
-pub use elf64::*;
+pub mod elf;
+pub mod utils;
 
-pub mod elf64;
+pub use elf::elf32;
+pub use elf::elf64;
