@@ -1,3 +1,5 @@
 /target
 Cargo.lock
-example_elf
+/binaries/*.o
+/binaries/example32
+/binaries/example64
