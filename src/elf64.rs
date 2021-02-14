@@ -1,10 +1,7 @@
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::{SeekFrom};
-
-use plain::Plain;
-use crate::elf::ElfHeader;
 use crate::utils::{Result, StringError};
+
+use std::mem;
+use plain::Plain;
 
 pub const HEADER_SIZE: usize = 0x40;
 
@@ -27,23 +24,13 @@ pub struct Elf64Header {
     pub e_shstrndx: u16,
 }
 
-impl ElfHeader for Elf64Header {
-    fn to_bytes(&self) -> Vec<u8> {
-        let buffer = unsafe {
-            let ptr = self as *const Self as *const u8;
-            std::slice::from_raw_parts(ptr, HEADER_SIZE)
-        };
-            
-        buffer.to_vec()
-    }
-}
-
 unsafe impl Plain for Elf64Header {}
 
 impl Elf64Header {
     pub fn from_bytes(buf: &[u8]) -> Result<Elf64Header> {
         use plain::Error::*;
         
+        // NOTE: Can maybe simplify with trait to convert dyn Error into StringError by calling to_string()?
         match plain::from_bytes(buf) {
             Ok(v) => Ok(*v),
             Err(e) => match e {
@@ -53,10 +40,13 @@ impl Elf64Header {
         }
     }
 
-    pub fn from_fd(fd: &mut File) -> Result<Elf64Header> {
-        let mut buf = [0u8; HEADER_SIZE];
-        fd.seek(SeekFrom::Start(0))?;
-        fd.read(&mut buf)?;
-        Elf64Header::from_bytes(&buf)
+    pub fn to_bytes(self) -> Vec<u8> {
+        let buffer = unsafe {
+            mem::transmute::<Elf64Header, [u8; HEADER_SIZE]>(self)
+            // let ptr = &self as *const Self as *const u8;
+            // std::slice::from_raw_parts(ptr, HEADER_SIZE)
+        };
+            
+        buffer.to_vec()
     }
 }
