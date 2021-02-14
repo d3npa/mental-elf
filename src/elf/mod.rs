@@ -15,7 +15,9 @@ pub enum Architecture {
     Elf64,
 }
 
-pub trait ElfHeader: fmt::Debug {}
+pub trait ElfHeader: fmt::Debug {
+    fn to_bytes(&self) -> Vec<u8>;
+}
 
 impl dyn ElfHeader {
     pub fn from_fd(fd: &mut File) -> Result<Box<dyn ElfHeader>> {

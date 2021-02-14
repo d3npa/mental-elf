@@ -20,5 +20,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("{:x?}", header);
 
+    let bytes = header.to_bytes();
+    println!("{:x?}", bytes);
+
     Ok(())
 }

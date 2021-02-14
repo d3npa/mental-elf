@@ -27,7 +27,16 @@ pub struct Elf64Header {
     pub e_shstrndx: u16,
 }
 
-impl ElfHeader for Elf64Header {}
+impl ElfHeader for Elf64Header {
+    fn to_bytes(&self) -> Vec<u8> {
+        let buffer = unsafe {
+            let ptr = self as *const Self as *const u8;
+            std::slice::from_raw_parts(ptr, HEADER_SIZE)
+        };
+            
+        buffer.to_vec()
+    }
+}
 
 unsafe impl Plain for Elf64Header {}
 
