@@ -12,7 +12,7 @@ pub fn read_elf64_header(fd: &mut File) -> Result<Elf64Header> {
     let mut buffer = [0u8; elf64::HEADER_SIZE];
     fd.seek(SeekFrom::Start(0))?;
     fd.read(&mut buffer)?;
-    Elf64Header::from_bytes(&buffer)
+    Ok(Elf64Header::from_bytes(buffer))
 }
 
 pub fn write_elf64_header(fd: &mut File, header: Elf64Header) -> Result<()> {
