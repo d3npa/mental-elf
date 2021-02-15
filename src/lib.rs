@@ -8,6 +8,21 @@ use elf64::ProgramHeader;
 use std::io::prelude::*;
 use std::io::SeekFrom;
 use std::fs::File;
+// use std::mem;
+
+// pub unsafe trait Serialize<const SIZE: usize>: Sized {
+//     fn from_bytes(buffer: [u8; SIZE]) -> Self {
+//         unsafe {
+//             mem::transmute::<[u8; SIZE], Self>(buffer)
+//         }
+//     }
+
+//     fn to_bytes(self: Self) -> [u8; SIZE] {
+//         unsafe {
+//             mem::transmute::<Self, [u8; SIZE]>(self)
+//         }
+//     }
+// }
 
 pub fn read_elf64_header(fd: &mut File) -> Result<ElfHeader> {
     let mut buffer = [0u8; elf64::ELF_HEADER_SIZE];
