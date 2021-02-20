@@ -63,6 +63,10 @@ pub mod constants {
     pub const PT_PHDR: u32 = 0x6;
     pub const PT_LOPROC: u32 = 0x70000000;
     pub const PT_HIPROC: u32 = 0x7fffffff;
+
+    pub const PF_X: u32 = 0b001;
+    pub const PF_W: u32 = 0b010;
+    pub const PF_R: u32 = 0b100;
 }
 
 
