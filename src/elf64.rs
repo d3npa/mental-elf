@@ -1,5 +1,7 @@
-use std::mem;
+use byteorder::{LittleEndian, ReadBytesExt};
 pub use constants::*;
+use std::io::Cursor;
+use std::mem;
 
 // TODO Separate this module into its own file ; ex: elf64/constants.rs
 pub mod constants {
@@ -67,8 +69,13 @@ pub mod constants {
     pub const PF_X: u32 = 0b001;
     pub const PF_W: u32 = 0b010;
     pub const PF_R: u32 = 0b100;
-}
 
+    // Section Headers
+    pub const SECTION_HEADER_SIZE: usize = 0x40;
+
+    // Symbol Table Entries
+    pub const SYMBOL_TABLE_ENTRY_SIZE: usize = 0x18;
+}
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -91,15 +98,11 @@ pub struct ElfHeader {
 
 impl ElfHeader {
     pub fn from_bytes(buffer: [u8; ELF_HEADER_SIZE]) -> ElfHeader {
-        unsafe {
-            mem::transmute::<[u8; ELF_HEADER_SIZE], ElfHeader>(buffer)
-        }
+        unsafe { mem::transmute::<[u8; ELF_HEADER_SIZE], ElfHeader>(buffer) }
     }
 
     pub fn to_bytes(self) -> [u8; ELF_HEADER_SIZE] {
-        unsafe {
-            mem::transmute::<ElfHeader, [u8; ELF_HEADER_SIZE]>(self)
-        }
+        unsafe { mem::transmute::<ElfHeader, [u8; ELF_HEADER_SIZE]>(self) }
     }
 }
 
@@ -118,14 +121,68 @@ pub struct ProgramHeader {
 
 impl ProgramHeader {
     pub fn from_bytes(buffer: [u8; PROGRAM_HEADER_SIZE]) -> ProgramHeader {
-        unsafe {
-            mem::transmute::<[u8; PROGRAM_HEADER_SIZE], ProgramHeader>(buffer)
-        }
+        unsafe { mem::transmute::<[u8; PROGRAM_HEADER_SIZE], ProgramHeader>(buffer) }
     }
 
     pub fn to_bytes(self) -> [u8; PROGRAM_HEADER_SIZE] {
-        unsafe {
-            mem::transmute::<ProgramHeader, [u8; PROGRAM_HEADER_SIZE]>(self)
+        unsafe { mem::transmute::<ProgramHeader, [u8; PROGRAM_HEADER_SIZE]>(self) }
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct SectionHeader {
+    pub sh_name: u32,
+    pub sh_type: u32,
+    pub sh_flags: u64,
+    pub sh_addr: u64,
+    pub sh_offset: u64,
+    pub sh_size: u64,
+    pub sh_link: u32,
+    pub sh_info: u32,
+    pub sh_addralign: u64,
+    pub sh_entsize: u64,
+}
+
+impl SectionHeader {
+    pub fn from_bytes(buffer: [u8; SECTION_HEADER_SIZE]) -> SectionHeader {
+        let mut rdr = Cursor::new(buffer);
+        SectionHeader {
+            sh_name: rdr.read_u32::<LittleEndian>().unwrap(),
+            sh_type: rdr.read_u32::<LittleEndian>().unwrap(),
+            sh_flags: rdr.read_u64::<LittleEndian>().unwrap(),
+            sh_addr: rdr.read_u64::<LittleEndian>().unwrap(),
+            sh_offset: rdr.read_u64::<LittleEndian>().unwrap(),
+            sh_size: rdr.read_u64::<LittleEndian>().unwrap(),
+            sh_link: rdr.read_u32::<LittleEndian>().unwrap(),
+            sh_info: rdr.read_u32::<LittleEndian>().unwrap(),
+            sh_addralign: rdr.read_u64::<LittleEndian>().unwrap(),
+            sh_entsize: rdr.read_u64::<LittleEndian>().unwrap(),
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct SymbolTableEntry {
+    pub st_name: u32,
+    pub st_info: u8,
+    pub st_other: u8,
+    pub st_shndx: u16,
+    pub st_value: u64,
+    pub st_size: u64,
+}
+
+impl SymbolTableEntry {
+    pub fn from_bytes(buffer: [u8; SYMBOL_TABLE_ENTRY_SIZE]) -> SymbolTableEntry {
+        let mut rdr = Cursor::new(buffer);
+        SymbolTableEntry {
+            st_name: rdr.read_u32::<LittleEndian>().unwrap(),
+            st_info: rdr.read_u8().unwrap(),
+            st_other: rdr.read_u8().unwrap(),
+            st_shndx: rdr.read_u16::<LittleEndian>().unwrap(),
+            st_value: rdr.read_u64::<LittleEndian>().unwrap(),
+            st_size: rdr.read_u64::<LittleEndian>().unwrap(),
         }
     }
 }
